@@ -44,6 +44,7 @@ jobs:
   - script: |
       cd libusb\ddk_make
       make.cmd dist
+    continueOnError: true
     displayName: 'Building distribution'
 
   - task: PublishBuildArtifacts@1
