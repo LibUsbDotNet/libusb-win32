@@ -1,0 +1,54 @@
+jobs:
+- job: windows_sys
+  pool:
+    vmImage: 'vs2017-win2016'
+  variables:
+    configuration: debug
+    platform: x64
+  steps:
+  - script: |
+      choco install -y wget 7zip innosetup
+    displayName: 'Install dependencies'
+    
+  - script: |
+      wget https://download.microsoft.com/download/4/A/2/4A25C7D5-EFBE-4182-B6A9-AE6850409A78/GRMWDK_EN_7600_1.ISO -O GRMWDK_EN_7600_1.ISO
+      mkdir GRMWDK
+      7z x GRMWDK_EN_7600_1.ISO -oGRMWDK
+      GRMWDK\KitSetup.exe /install {45273B30-342D-4748-494A-4B4C4D4E4F50} /no-view /ui-level express
+    displayName: 'Download and install WDK 7.1'
+
+  - script: |
+      cd libusb\ddk_make
+      make.cmd driver "arch=x64"
+    displayName: 'Build libusb0.sys (64-bit)'
+
+  - script: |
+      cd libusb\ddk_make
+      make.cmd driver "arch=x86"
+    displayName: 'Build libusb0.sys (32-bit)'
+
+  - script: |
+      mkdir %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x86\native
+      copy libusb\ddk_make\x86\libusb0.* %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x86\native
+      mkdir %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x64\native
+      copy libusb\ddk_make\x64\libusb0.* %BUILD_ARTIFACTSTAGINGDIRECTORY%\runtimes\win-x64\native
+    displayName: 'Copy artifacts'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+      artifactName: 'drop' 
+      publishLocation: 'Container'
+    displayName: 'Publish libusb0.sys artifacts'
+
+  - script: |
+      cd libusb\ddk_make
+      make.cmd dist
+    displayName: 'Building distribution'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: 'C:\packages\libusb-win32\package'
+      artifactName: 'libusb-win32'
+      publishLocation: 'Container'
+    displayName: 'Publish libusb-win32 distribution'
