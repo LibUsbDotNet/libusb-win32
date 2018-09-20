@@ -872,7 +872,7 @@ GOTO :EOF
 	IF EXIST "%~2" DEL /Q "%~2"
 	ECHO [Tokenizing] %~1..
 	SET CMDVAR_>!TAG_ENV_TMP!
-	FOR /F "tokens=1,* delims=]" %%A IN ('"type %1|find /n /v """') DO (
+	FOR /F "tokens=1,* delims=]" %%A IN ('"type %1|%windir%\System32\find /n /v """') DO (
 		SET "line=%%B"
 		IF DEFINED line (
 			FOR /F "tokens=1,* usebackq delims==" %%I IN (!TAG_ENV_TMP!) DO (
