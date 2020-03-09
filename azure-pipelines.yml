@@ -44,6 +44,7 @@ jobs:
   - script: |
       cd libusb\ddk_make
       make.cmd dist
+      make.cmd zip
     continueOnError: true
     displayName: 'Building distribution'
 
